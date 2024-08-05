@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:todo_list_app/config/widgets/common_snack_bar.dart';
 import 'package:todo_list_app/config/widgets/custom_progress_bar.dart';
 import 'package:todo_list_app/constants/assets_path.dart';
+import 'package:todo_list_app/modules/home/presentation/screen/home_screen.dart';
 import 'package:todo_list_app/modules/splash/presentation/bloc/splash_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,6 +48,7 @@ class _SplashScreenState extends State<SplashScreen>
           listener: (context, state) {
             if (state is NavigateToHome) {
               CustomProgressBar(context).hideLoadingIndicator();
+              Navigator.push(context, CupertinoPageRoute(builder: (context) => const HomeScreen()));
             } else if (state is FailureState) {
               CustomProgressBar(context).hideLoadingIndicator();
               ScaffoldMessenger.of(context).showSnackBar(snackBarWidget(
