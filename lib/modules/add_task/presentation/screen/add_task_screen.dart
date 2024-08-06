@@ -1,10 +1,9 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:todo_list_app/config/colors.dart';
+import 'package:todo_list_app/config/dependency_injection/injection_container.dart';
 import 'package:todo_list_app/config/styles.dart';
 import 'package:todo_list_app/config/widgets/common_snack_bar.dart';
 import 'package:todo_list_app/config/widgets/common_text_field.dart';
@@ -15,6 +14,7 @@ import 'package:todo_list_app/modules/add_task/presentation/bloc/add_task_event.
 import 'package:todo_list_app/modules/add_task/presentation/bloc/add_task_state.dart';
 import 'package:todo_list_app/modules/home/data/model/task_model.dart';
 import 'package:todo_list_app/utils/remove_emoji_input_formatter.dart';
+import 'dart:math';
 
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
@@ -50,14 +50,15 @@ class AddTaskScreenState extends State<AddTaskScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => AddTaskBloc(),
+      create: (context) => getIt<AddTaskBloc>(),
       child: BlocListener<AddTaskBloc, AddTaskState>(
         listener: (context, state) {
           if (state is ShowProgressBar) {
             CustomProgressBar(context).showLoadingIndicator();
           } else if (state is TaskAddedSuccess) {
             CustomProgressBar(context).hideLoadingIndicator();
-            ScaffoldMessenger.of(context).showSnackBar(snackBarWidget("Task added successfully"));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(snackBarWidget("Task added successfully"));
             Navigator.pop(context, true);
           }
         },
@@ -117,14 +118,16 @@ class AddTaskScreenState extends State<AddTaskScreen> {
                                     readOnly: true,
                                     //onTap: _handleDatePicker,
                                     inputFormatters: [
-                                      FilteringTextInputFormatter.allow(RegExp("[+a-zA-Z0-9@._-]")),
+                                      FilteringTextInputFormatter.allow(
+                                          RegExp("[+a-zA-Z0-9@._-]")),
                                     ],
                                   ),
                                 ),
                               ),
                               const SizedBox(height: 28),
                               Padding(
-                                padding: const EdgeInsets.only(left: 25, right: 25),
+                                padding:
+                                    const EdgeInsets.only(left: 25, right: 25),
                                 child: TextFormField(
                                   inputFormatters: [
                                     RemoveEmojiInputFormatter(),
@@ -138,22 +141,35 @@ class AddTaskScreenState extends State<AddTaskScreen> {
                                   maxLength: 250,
                                   decoration: InputDecoration(
                                     hintText: AppConstants.description,
-                                    hintStyle: TextStyles.whiteRegular14.copyWith(color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500),
-                                    contentPadding: const EdgeInsets.only(top: 15, left: 10, right: 10, bottom: 10),
+                                    hintStyle: TextStyles.whiteRegular14
+                                        .copyWith(
+                                            color:
+                                                Colors.black.withOpacity(0.6),
+                                            fontWeight: FontWeight.w500),
+                                    contentPadding: const EdgeInsets.only(
+                                        top: 15,
+                                        left: 10,
+                                        right: 10,
+                                        bottom: 10),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(width: 0.5, color: AppColors.greyColor),
+                                      borderSide: BorderSide(
+                                          width: 0.5,
+                                          color: AppColors.greyColor),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(width: 0.5, color: AppColors.greyColor),
+                                      borderSide: BorderSide(
+                                          width: 0.5,
+                                          color: AppColors.greyColor),
                                     ),
                                   ),
                                   onChanged: (value) {
-                                    // if (value.isEmpty) {
-                                    //   CustomProgressBar(context).showLoadingIndicator();
-                                    //   // BlocProvider.of<AddQuestionBloc>(context).add(PostButtonEnabled(isEnabled: false));
-                                    // }
+                                    if (value.isEmpty) {
+                                      CustomProgressBar(context)
+                                          .showLoadingIndicator();
+                                      // BlocProvider.of<AddQuestionBloc>(context).add(PostButtonEnabled(isEnabled: false));
+                                    }
                                   },
                                 ),
                               ),

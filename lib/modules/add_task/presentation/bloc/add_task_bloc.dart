@@ -1,10 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 import 'package:todo_list_app/modules/add_task/presentation/bloc/add_task_event.dart';
 import 'package:todo_list_app/modules/add_task/presentation/bloc/add_task_state.dart';
 import 'package:todo_list_app/modules/home/data/model/task_model.dart';
 import 'package:todo_list_app/modules/home/data/repository/home_repository.dart';
-import 'package:todo_list_app/modules/splash/data/model/failure_response_model.dart';
 
+
+
+@injectable
 class AddTaskBloc extends Bloc<AddTaskEvent, AddTaskState> {
   AddTaskBloc() : super(AddTaskInitial()) {
     on<AddTaskTapped>(_onAddTaskTappedEvent);

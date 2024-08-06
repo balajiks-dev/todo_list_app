@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:todo_list_app/config/colors.dart';
+import 'package:todo_list_app/config/dependency_injection/injection_container.dart';
 import 'package:todo_list_app/config/styles.dart';
 import 'package:todo_list_app/config/widgets/custom_progress_bar.dart';
 import 'package:todo_list_app/constants/app_constants.dart';
-import 'package:todo_list_app/modules/add_task/presentation/screen/add_task_screen.dart';
 import 'package:todo_list_app/modules/complete_task/presentation/bloc/complete_task_bloc.dart';
 import 'package:todo_list_app/modules/complete_task/presentation/bloc/complete_task_event.dart';
-import 'package:todo_list_app/modules/complete_task/presentation/bloc/complete_task_state.dart' as completed_task_state;
+import 'package:todo_list_app/modules/complete_task/presentation/bloc/complete_task_state.dart'
+    as completed_task_state;
 import 'package:todo_list_app/modules/home/data/model/task_model.dart';
 import 'package:todo_list_app/modules/home/presentation/bloc/home_bloc.dart';
+import 'package:todo_list_app/modules/add_task/presentation/screen/add_task_screen.dart';
+import 'package:todo_list_app/modules/home/presentation/bloc/home_event.dart';
+import 'package:todo_list_app/modules/task_filter/presentation/task_filter_screen.dart';
+
+import '../bloc/home_state.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,6 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
   List<TaskModel> taskList = [];
   int completedTaskCount = 0;
   int pendingTaskCount = 0;
+  List<TaskModel> filterTaskList = [];
+  bool isFilter = false;
+  String status = '';
   final DateFormat _dateFormatter = DateFormat('MMM dd, yyyy');
 
   @override
@@ -30,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => HomeBloc()..add(GetTaskList()),
+          create: (context) => getIt<HomeBloc>()..add(GetTaskList())
         ),
         BlocProvider(
           create: (context) => CompleteTaskBloc(),
@@ -47,7 +56,8 @@ class _HomeScreenState extends State<HomeScreen> {
             pendingTaskCount = state.pendingTaskCount;
           }
         },
-        child: BlocListener<CompleteTaskBloc, completed_task_state.CompleteTaskState>(
+        child: BlocListener<CompleteTaskBloc,
+            completed_task_state.CompleteTaskState>(
           listener: (context, state) {
             if (state is completed_task_state.ShowProgressBar) {
               CustomProgressBar(context).showLoadingIndicator();
@@ -60,7 +70,8 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           child: BlocBuilder<HomeBloc, HomeState>(
             builder: (context, state) {
-              return BlocBuilder<CompleteTaskBloc, completed_task_state.CompleteTaskState>(
+              return BlocBuilder<CompleteTaskBloc,
+                  completed_task_state.CompleteTaskState>(
                 builder: (context, state) {
                   return Scaffold(
                     key: const Key("homeScreenKey"),
@@ -90,53 +101,113 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ).then((value) {
                             if (value != null && value!) {
-                              BlocProvider.of<HomeBloc>(context).add(GetTaskList());
+                              BlocProvider.of<HomeBloc>(context)
+                                  .add(GetTaskList());
                             }
                           });
                         }),
                     body: taskList.isNotEmpty
                         ? ListView.builder(
-                            itemCount: taskList.length + 1,
+                            itemCount:isFilter?filterTaskList.length+1: taskList.length + 1,
                             itemBuilder: (BuildContext context, int index) {
                               if (index == 0) {
                                 return Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 0.0, vertical: 0.0),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: <Widget>[
-                                      Container(
-                                        margin: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 0.0),
-                                        padding: const EdgeInsets.all(10.0),
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.rectangle,
-                                          color: pendingTaskCount != 0 ? AppColors.eventBackGroundColor : Colors.green,
-                                          borderRadius: const BorderRadius.all(Radius.circular(10.0)),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                              pendingTaskCount != 0
-                                                  ? 'You have [ $pendingTaskCount ] pending task out of [ ${completedTaskCount + pendingTaskCount} ]'
-                                                  : 'Congratulations! You have completed all the tasks.',
-                                              style: TextStyles.whiteRegular14),
-                                        ),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Container(
+                                              margin: const EdgeInsets.fromLTRB(
+                                                  20.0, 10.0, 10.0, 0.0),
+                                              padding: const EdgeInsets.all(10.0),
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.rectangle,
+                                                color: pendingTaskCount != 0
+                                                    ? AppColors
+                                                        .eventBackGroundColor
+                                                    : Colors.green,
+                                                borderRadius:
+                                                    const BorderRadius.all(
+                                                        Radius.circular(10.0)),
+                                              ),
+                                              child: Center(
+                                                child: Text(
+                                                    pendingTaskCount != 0
+                                                        ? 'You have [ $pendingTaskCount ] pending task out of [ ${completedTaskCount + pendingTaskCount} ]'
+                                                        : 'Congratulations! You have completed all the tasks.',
+                                                    style: TextStyles
+                                                        .whiteRegular14),
+                                              ),
+                                            ),
+                                          ),
+                                          GestureDetector(
+                                            behavior: HitTestBehavior.opaque,
+                                            onTap: (){
+                                              showModalBottomSheet<String>(
+                                                context: context,
+                                                builder: (BuildContext context) {
+                                                  return  TaskFilterScreen(selectedStatus: status);
+                                                },
+                                              ).then((String? value) {
+                                                if (value != null&&value.isNotEmpty) {
+                                                  status = value;
+                                                  int filterStatus = value== "Completed"?1:0;
+                                                  filterTaskList = taskList.where((task) => task.status == filterStatus).toList();
+                                                  isFilter =true;
+                                                }else{
+                                                  status = '';
+                                                  isFilter =false;
+                                                }
+                                                setState(() {});
+                                              });
+                                            },
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(right: 10),
+                                              child: Container(
+                                                padding: const EdgeInsets.all(10.0),
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.rectangle,
+                                                  color: AppColors
+                                                      .eventBackGroundColor,
+                                                  borderRadius:
+                                                      const BorderRadius.all(
+                                                          Radius.circular(10.0)),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.filter_alt_rounded,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                       Padding(
-                                        padding: const EdgeInsets.only(left: 20, top: 20),
+                                        padding: const EdgeInsets.only(
+                                            left: 20, top: 20),
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
                                           children: [
                                             Row(
                                               children: [
                                                 Icon(
                                                   Icons.album_rounded,
-                                                  color: AppColors.eventBackGroundColor,
+                                                  color: AppColors
+                                                      .eventBackGroundColor,
                                                 ),
                                                 const SizedBox(
                                                   width: 10,
                                                 ),
                                                 Text(
                                                   AppConstants.pending,
-                                                  style: TextStyles.blackMedium14,
+                                                  style:
+                                                      TextStyles.blackMedium14,
                                                 ),
                                               ],
                                             ),
@@ -151,7 +222,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 ),
                                                 Text(
                                                   AppConstants.completed,
-                                                  style: TextStyles.blackMedium14,
+                                                  style:
+                                                      TextStyles.blackMedium14,
                                                 ),
                                               ],
                                             ),
@@ -162,7 +234,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 );
                               }
-                              return _buildTaskView(taskList[index - 1], context);
+                              return _buildTaskView(
+                                 isFilter?filterTaskList[index-1]: taskList[index - 1], context);
                             },
                           )
                         : Center(
@@ -212,32 +285,40 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemBuilder: (BuildContext context, int index) {
                           if (index == 0) {
                             return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 0.0, vertical: 0.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
                                   Container(
-                                    margin: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 0.0),
+                                    margin: const EdgeInsets.fromLTRB(
+                                        20.0, 10.0, 20.0, 0.0),
                                     padding: const EdgeInsets.all(10.0),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.rectangle,
                                       color: AppColors.eventBackGroundColor,
-                                      borderRadius: const BorderRadius.all(Radius.circular(10.0)),
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(10.0)),
                                     ),
                                     child: Center(
-                                      child: Text('You have [ $pendingTaskCount ] pending task out of [ ${completedTaskCount + pendingTaskCount} ]', style: TextStyles.whiteRegular14),
+                                      child: Text(
+                                          'You have [ $pendingTaskCount ] pending task out of [ ${completedTaskCount + pendingTaskCount} ]',
+                                          style: TextStyles.whiteRegular14),
                                     ),
                                   ),
                                   Padding(
-                                    padding: const EdgeInsets.only(left: 20, top: 20),
+                                    padding: const EdgeInsets.only(
+                                        left: 20, top: 20),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
                                       children: [
                                         Row(
                                           children: [
                                             Icon(
                                               Icons.album_rounded,
-                                              color: AppColors.eventBackGroundColor,
+                                              color: AppColors
+                                                  .eventBackGroundColor,
                                             ),
                                             const SizedBox(
                                               width: 10,
@@ -318,7 +399,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
                     child: Text(
-                      task.date != null ? _dateFormatter.format(task.date!) : "",
+                      task.date != null
+                          ? _dateFormatter.format(task.date!)
+                          : "",
                       style: TextStyles.blackMedium14,
                     ),
                   ),
@@ -339,7 +422,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         key: const Key("markAsCompletedButtonKey"),
                         onTap: () {
                           BlocProvider.of<CompleteTaskBloc>(context).add(
-                            MarkAsCompleteTask(taskList: taskList, markedCompletedTask: task),
+                            MarkAsCompleteTask(
+                                taskList: taskList, markedCompletedTask: task),
                           );
                         },
                         child: Container(

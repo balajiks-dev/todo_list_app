@@ -1,8 +1,11 @@
 import 'dart:convert';
 
+import 'package:injectable/injectable.dart';
 import 'package:todo_list_app/modules/home/data/model/task_model.dart';
 import 'package:todo_list_app/utils/pref.dart';
 
+
+@injectable
 class HomeRepository {
   Future<dynamic> saveTaskList(List<TaskModel> taskList) async {
     List<String> jsonStringList = taskList.map((task) => json.encode(task.toJson())).toList();

@@ -1,6 +1,6 @@
-part of 'home_bloc.dart';
+import 'package:equatable/equatable.dart';
+import 'package:todo_list_app/modules/home/data/model/task_model.dart';
 
-@immutable
 abstract class HomeState {}
 
 class HomeInitial extends HomeState {}

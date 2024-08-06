@@ -1,8 +1,11 @@
+import 'package:todo_list_app/config/dependency_injection/injection_container.dart';
 import 'package:todo_list_app/modules/splash/presentation/screen/splash_screen.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+Future<void> main() async {
   runApp(const MyApp());
+  await configureDependencies();
+  await getIt.allReady();
 }
 
 class MyApp extends StatefulWidget {
