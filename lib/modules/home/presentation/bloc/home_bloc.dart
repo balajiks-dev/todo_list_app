@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:todo_list_app/constants/app_constants.dart';
 import 'package:todo_list_app/core/network/meta.dart';
 import 'package:todo_list_app/modules/home/data/model/task_model.dart';
+import 'package:todo_list_app/modules/home/data/repository/home_repository.dart';
 import 'package:todo_list_app/modules/splash/data/model/failure_response_model.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,8 +14,6 @@ part 'home_event.dart';
 part 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  static final List<TaskModel> _taskModel = [];
-
   HomeBloc() : super(HomeInitial()) {
     on<GetTaskList>(_onGetTaskList);
   }
@@ -24,9 +23,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     Emitter<HomeState> emit,
   ) async {
     emit(ShowProgressBar());
+    List<TaskModel> tasks = await HomeRepository().getTaskList();
     int completedTaskCount = 0;
     int pendingTaskCount = 0;
-    _taskModel.forEach((element) {
+    tasks.forEach((element) {
       if (element.status != null && element.status == 0) {
         pendingTaskCount++;
       } else {
@@ -34,7 +34,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       }
     });
     emit(ShowTaskList(
-      taskList: _taskModel,
+      taskList: tasks,
       pendingTaskCount: pendingTaskCount,
       completedTaskCount: completedTaskCount,
     ));

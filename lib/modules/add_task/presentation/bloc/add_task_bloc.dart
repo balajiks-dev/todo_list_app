@@ -3,6 +3,7 @@ import 'package:todo_list_app/modules/add_task/presentation/bloc/add_task_event.
 import 'package:todo_list_app/modules/add_task/presentation/bloc/add_task_state.dart';
 import 'package:todo_list_app/modules/home/data/model/task_model.dart';
 import 'package:todo_list_app/modules/home/data/repository/home_repository.dart';
+import 'package:todo_list_app/modules/splash/data/model/failure_response_model.dart';
 
 class AddTaskBloc extends Bloc<AddTaskEvent, AddTaskState> {
   AddTaskBloc() : super(AddTaskInitial()) {
@@ -13,31 +14,20 @@ class AddTaskBloc extends Bloc<AddTaskEvent, AddTaskState> {
     AddTaskTapped event,
     Emitter<AddTaskState> emit,
   ) async {
-    emit(ShowProgressBar());
-    List<TaskModel> taskList = [
-      TaskModel(
-          title: "Same",
-          id: 323,
-          date: DateTime.now(),
-          priority: "LOW",
-          status: 0),
-      TaskModel(
-          title: "Different",
-          id: 44,
-          date: DateTime.now(),
-          priority: "HIGH",
-          status: 1),
-    ];
-    bool isSaved = await HomeRepository().saveTaskList(taskList);
-
-    print("The Task List is Saved successfully ----> $isSaved");
-
-    List<TaskModel> tasks = await HomeRepository().getTaskList();
-
-    print("The Task List is retrieved successfully ----> ${tasks.toString()}");
-
-    if(isSaved){
-      emit(TaskAddedSuccess());
+    if (event.taskModel.title != null &&
+        event.taskModel.title!.isNotEmpty &&
+        event.taskModel.description != null &&
+        event.taskModel.description!.isNotEmpty &&
+        event.taskModel.date != null) {
+      List<TaskModel> tasks = await HomeRepository().getTaskList();
+      tasks.add(event.taskModel);
+      bool isSaved = await HomeRepository().saveTaskList(tasks);
+      if (isSaved) {
+        emit(TaskAddedSuccess(taskList: tasks));
+      }
+    } else {
+      String error = "";
+      emit(FailureState(message: error));
     }
   }
 }

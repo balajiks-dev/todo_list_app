@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:todo_list_app/config/colors.dart';
 import 'package:todo_list_app/config/widgets/common_snack_bar.dart';
 import 'package:todo_list_app/config/widgets/custom_progress_bar.dart';
 import 'package:todo_list_app/constants/assets_path.dart';
@@ -74,10 +75,10 @@ class _SplashScreenState extends State<SplashScreen>
     return AnimatedOpacity(
       opacity: _visible ? 1.0 : 0,
       duration: const Duration(seconds: 5),
-      child: const Center(
+      child: Center(
         child: Icon(
           Icons.library_books_sharp,
-          color: Colors.redAccent,
+          color: AppColors.eventBackGroundColor,
           size: 150,
         ),
       ),

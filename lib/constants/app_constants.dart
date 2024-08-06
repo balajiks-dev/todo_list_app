@@ -11,5 +11,13 @@ class AppConstants {
   static const String noTaskListFound = "No Task Found. Create a new Task";
   static const String cgiToDoList = "DUMMY TASK MANAGER";
   static const String addToDoWork = "Add TO DO WORK";
+  static const String title = "Title";
+  static const String date = "Date";
+  static const String addTask = "Add Task";
+  static const String description = "Description";
+  static const String addDescription = "Add Description";
+  static const String pending = "Pending";
+  static const String completed = "Completed";
+  static const String markAsCompleted = "Mark As Completed";
 }
 
