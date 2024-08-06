@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,18 +15,18 @@ import 'package:todo_list_app/modules/add_task/presentation/bloc/add_task_event.
 import 'package:todo_list_app/modules/add_task/presentation/bloc/add_task_state.dart';
 import 'package:todo_list_app/modules/home/data/model/task_model.dart';
 import 'package:todo_list_app/utils/remove_emoji_input_formatter.dart';
-import 'dart:math';
 
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
 
   @override
-  State<AddTaskScreen> createState() => _AddTaskScreenState();
+  State<AddTaskScreen> createState() => AddTaskScreenState();
 }
 
-class _AddTaskScreenState extends State<AddTaskScreen> {
+@visibleForTesting
+class AddTaskScreenState extends State<AddTaskScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController dateController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final DateFormat _dateFormatter = DateFormat('MMM dd, yyyy');
@@ -41,7 +43,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       setState(() {
         _date = date;
       });
-      _dateController.text = _dateFormatter.format(date);
+      dateController.text = _dateFormatter.format(date);
     }
   }
 
@@ -55,14 +57,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             CustomProgressBar(context).showLoadingIndicator();
           } else if (state is TaskAddedSuccess) {
             CustomProgressBar(context).hideLoadingIndicator();
-            ScaffoldMessenger.of(context)
-                .showSnackBar(snackBarWidget("Task added successfully"));
+            ScaffoldMessenger.of(context).showSnackBar(snackBarWidget("Task added successfully"));
             Navigator.pop(context, true);
           }
         },
         child: BlocBuilder<AddTaskBloc, AddTaskState>(
           builder: (context, state) {
             return Scaffold(
+              key: const Key("addTaskScreenKey"),
               backgroundColor: Colors.white,
               appBar: AppBar(
                 leading: IconButton(
@@ -108,23 +110,21 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                 child: SizedBox(
                                   height: 72,
                                   child: CommonTextField(
-                                    controller: _dateController,
+                                    controller: dateController,
                                     hintText: "",
                                     labelText: AppConstants.date,
                                     isMandatory: true,
                                     readOnly: true,
                                     //onTap: _handleDatePicker,
                                     inputFormatters: [
-                                      FilteringTextInputFormatter.allow(
-                                          RegExp("[+a-zA-Z0-9@._-]")),
+                                      FilteringTextInputFormatter.allow(RegExp("[+a-zA-Z0-9@._-]")),
                                     ],
                                   ),
                                 ),
                               ),
                               const SizedBox(height: 28),
                               Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 25, right: 25),
+                                padding: const EdgeInsets.only(left: 25, right: 25),
                                 child: TextFormField(
                                   inputFormatters: [
                                     RemoveEmojiInputFormatter(),
@@ -138,35 +138,22 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                   maxLength: 250,
                                   decoration: InputDecoration(
                                     hintText: AppConstants.description,
-                                    hintStyle: TextStyles.whiteRegular14
-                                        .copyWith(
-                                            color:
-                                                Colors.black.withOpacity(0.6),
-                                            fontWeight: FontWeight.w500),
-                                    contentPadding: const EdgeInsets.only(
-                                        top: 15,
-                                        left: 10,
-                                        right: 10,
-                                        bottom: 10),
+                                    hintStyle: TextStyles.whiteRegular14.copyWith(color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500),
+                                    contentPadding: const EdgeInsets.only(top: 15, left: 10, right: 10, bottom: 10),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(
-                                          width: 0.5,
-                                          color: AppColors.greyColor),
+                                      borderSide: BorderSide(width: 0.5, color: AppColors.greyColor),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(
-                                          width: 0.5,
-                                          color: AppColors.greyColor),
+                                      borderSide: BorderSide(width: 0.5, color: AppColors.greyColor),
                                     ),
                                   ),
                                   onChanged: (value) {
-                                    if (value.isEmpty) {
-                                      CustomProgressBar(context)
-                                          .showLoadingIndicator();
-                                      // BlocProvider.of<AddQuestionBloc>(context).add(PostButtonEnabled(isEnabled: false));
-                                    }
+                                    // if (value.isEmpty) {
+                                    //   CustomProgressBar(context).showLoadingIndicator();
+                                    //   // BlocProvider.of<AddQuestionBloc>(context).add(PostButtonEnabled(isEnabled: false));
+                                    // }
                                   },
                                 ),
                               ),
@@ -192,6 +179,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     return Padding(
       padding: const EdgeInsets.only(left: 24.0, right: 24.0),
       child: ElevatedButton(
+        key: const Key("addTaskSubmitKey"),
         style: ElevatedButton.styleFrom(
           fixedSize: Size.fromWidth(MediaQuery.of(context).size.width),
           padding: const EdgeInsets.symmetric(vertical: 16),
